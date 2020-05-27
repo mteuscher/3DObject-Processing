@@ -145,15 +145,15 @@ def process(line):
                     lineZ = float(line.split(sep="\t")[12])
                     return lineVol, lineX, lineY, lineZ
     
-def analyzeFile(filename):    
-    foundValue = []
-    with open(openFile) as f:
-        for line in f:
-            temp = process(line)
-            if temp is not None:
-                foundValue.append(temp)
-    f.close()
-    return foundValue
+# def analyzeFile(filename):    
+#     foundValue = []
+#     with open(openFile) as f:
+#         for line in f:
+#             temp = process(line)
+#             if temp is not None:
+#                 foundValue.append(temp)
+#     f.close()
+#     return foundValue
 
 files = generateFileList(path, file_type, name_part)
 
@@ -188,7 +188,7 @@ for entry in X:
     finalZ.append("NA")
 
 print("Detected {} files for Processing".format(len(files)))
-if query_yes_no("Do you want to inspect the files and their order?") is True:
+if query_yes_no("Do you want to inspect the files and their order?", default="no") is True:
     for file in files:
         print(file)
     
