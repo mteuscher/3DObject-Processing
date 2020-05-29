@@ -6,6 +6,10 @@ Modified 3D Objects Counter Plugin to include ID, Min Dist. to Surf., Max Dist. 
 
 ## 3DOC - MT-version.ijm
 ImageJ Macro to include all required steps for extracting the nuclei from source images. Specific for fused/deconvolved images from Cologne SPIM. Some parameters need to be adjusted each time (see comments in script)
+Need the modified 3D Objects Counter Plugin
+
+## 3DOC -regular version.ijm
+Does the same as 3DOC - MT-version.ijm, but uses the official 3D Object Counter Plugin
 
 ## extract similar objects.py
 Run in normal Python environment. Uses a reference timepoint to extract coordinates of the Objects detected by 3D Object counter. Then look in all files of the folder for the same coordinates within a certain tolerance and write results to a new file. This is for now determined by the column the values are in. So depending what results you choose to obtain it might be different than used by this script.
