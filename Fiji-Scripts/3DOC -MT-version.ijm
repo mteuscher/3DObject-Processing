@@ -85,11 +85,11 @@ function processFile(input, output, file) {
 
 function makeSubstack(input, output, file, substack) {
 	print("Creating Substack of: " + input + "\\" + file);
-	makeRectangle(17, 64, 905, 468);
+	makeRectangle(17, 64, 905, 468);  //Adjust to correct cropping parameters
 	run("Crop");
-	run("Duplicate...", "duplicate range=49-596");
+	run("Duplicate...", "duplicate range=49-596"); //Adjust for correct stack range
 	run("16-bit");
-	run("Properties...", "channels=1 slices=548 frames=1 unit=um pixel_width=0.645 pixel_height=0.645 voxel_depth=0.645 origin=0,0,0");
+	run("Properties...", "channels=1 slices=548 frames=1 unit=um pixel_width=0.645 pixel_height=0.645 voxel_depth=0.645 origin=0,0,0");  //update number of slices in total (slices=)
 	saveAs("Tiff", substack + "\\" + "Substack-" + list[i]);
 	selectWindow(list[i]);
 	close();
