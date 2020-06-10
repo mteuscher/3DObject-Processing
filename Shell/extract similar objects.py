@@ -5,12 +5,11 @@ X = []
 Y = []
 Z = []
 
-
 path = str(input("Enter Path:"))
+
 file_type = str(input("Enter file suffix:"))
 name_part = str(input("Only Process files containing:"))
 referenceTimepoint = int(input("Which Timepoint to use as Reference?:"))
-
 
 def sortNames(elem):
     test = elem.split("TP")[1]
@@ -135,15 +134,18 @@ def query_yes_no(question, default="yes"):
                              "(or 'y' or 'n').\n")
 
 def process(line):
-    if line.split(sep="\t")[10] is not "X":
-        if X_temp-5 < float(line.split(sep="\t")[10]) < X_temp+5:
-            if Y_temp-5 < float(line.split(sep="\t")[11]) < Y_temp+5:
-                if Z_temp-5 < float(line.split(sep="\t")[12]) < Z_temp+5:
-                    lineVol = float(line.split(sep="\t")[0])
-                    lineX = float(line.split(sep="\t")[10])
-                    lineY = float(line.split(sep="\t")[11])
-                    lineZ = float(line.split(sep="\t")[12])
-                    return lineVol, lineX, lineY, lineZ
+    if line.split(sep="\t")[11] is not "X":
+        if X_temp-5 < float(line.split(sep="\t")[11]) < X_temp+5:
+            if Y_temp-5 < float(line.split(sep="\t")[12]) < Y_temp+5:
+                if Z_temp-5 < float(line.split(sep="\t")[13]) < Z_temp+5:
+                    lineVol = float(line.split(sep="\t")[1])
+                    lineMinDist = float(line.split(sep="\t")[17])
+                    lineMaxDist = float(line.split(sep="\t")[18])
+                    lineRatioDist = float(line.split(sep="\t")[19])
+                    lineX = float(line.split(sep="\t")[11])
+                    lineY = float(line.split(sep="\t")[12])
+                    lineZ = float(line.split(sep="\t")[13])
+                    return lineVol, lineMinDist, lineMaxDist, lineRatioDist ,lineX, lineY, lineZ
     
 # def analyzeFile(filename):    
 #     foundValue = []
@@ -159,13 +161,16 @@ files = generateFileList(path, file_type, name_part)
 
 f = open(str(files[referenceTimepoint-1]))
 for line in f:
-    if line.split(sep="\t")[10] is not "X":
-        X.append(float(line.split(sep="\t")[10]))
-        Y.append(float(line.split(sep="\t")[11]))
-        Z.append(float(line.split(sep="\t")[12]))
+    if line.split(sep="\t")[11] is not "X":
+        X.append(float(line.split(sep="\t")[11]))
+        Y.append(float(line.split(sep="\t")[12]))
+        Z.append(float(line.split(sep="\t")[13]))
 f.close()
 
 finalVol = []
+finalMinDist = []
+finalMaxDist = []
+finalRatioDist = []
 finalX = []
 finalY = []
 finalZ = []
@@ -175,6 +180,9 @@ for file in files:
     header.append(file.split(os.sep)[-1])
     
 finalVol.append(header)
+finalMinDist.append(header)
+finalMaxDist.append(header)
+finalRatioDist.append(header)
 finalX.append(header)
 finalY.append(header)
 finalZ.append(header)
@@ -183,6 +191,9 @@ finalZ.append(header)
 
 for entry in X:
     finalVol.append("NA")
+    finalMinDist.append("NA")
+    finalMaxDist.append("NA")
+    finalRatioDist.append("NA")
     finalX.append("NA")
     finalY.append("NA")
     finalZ.append("NA")
@@ -203,6 +214,9 @@ while i < len(X):
     Y_temp = Y[i]
     Z_temp = Z[i]
     nucleiVol = []
+    nucleiMinDist = []
+    nucleiMaxDist = []
+    nucleiRatioDist = []
     nucleiX = []
     nucleiY = []
     nucleiZ = []
@@ -212,22 +226,31 @@ while i < len(X):
     
     for file in files:
         #result = ["TP{}".format(sortNames(file))]
-        resultVol, resultX, resultY, resultZ = [], [], [], []
+        resultVol, resultMinDist, resultMaxDist, resultRatioDist, resultX, resultY, resultZ = [], [], [], [], [], [], []
 
         f = open(str(file))
         for line in f:
             temp = process(line)
             if temp is not None:
                 resultVol.append(temp[0])
-                resultX.append(temp[1])
-                resultY.append(temp[2])
-                resultZ.append(temp[3])
+                resultMinDist.append(temp[1])
+                resultMaxDist.append(temp[2])
+                resultRatioDist.append(temp[3])
+                resultX.append(temp[4])
+                resultY.append(temp[5])
+                resultZ.append(temp[6])
         nucleiVol.append(resultVol) if not (resultVol == []) else (nucleiVol.append("NA"))
+        nucleiMinDist.append(resultMinDist) if not (resultMinDist == []) else (nucleiMinDist.append("NA"))
+        nucleiMaxDist.append(resultMaxDist) if not (resultMaxDist == []) else (nucleiMaxDist.append("NA"))
+        nucleiRatioDist.append(resultRatioDist) if not (resultRatioDist == []) else (nucleiRatioDist.append("NA"))
         nucleiX.append(resultX) if not (resultX == []) else (nucleiX.append("NA"))
         nucleiY.append(resultY) if not (resultY == []) else (nucleiY.append("NA"))
         nucleiZ.append(resultZ) if not (resultZ == []) else (nucleiZ.append("NA"))
         f.close()
     finalVol[i+1] = nucleiVol
+    finalMinDist[i+1] = nucleiMinDist
+    finalMaxDist[i+1] = nucleiMaxDist
+    finalRatioDist[i+1] = nucleiRatioDist
     finalX[i+1] = nucleiX
     finalY[i+1] = nucleiY
     finalZ[i+1] = nucleiZ
@@ -235,7 +258,7 @@ while i < len(X):
 
 print("Detection finished, writing results file")
     
-f = open(os.path.join(path, "results-Volume-Reference_{}.csv".format(str(files[referenceTimepoint-1]).split(os.sep)[-1])), "w+")
+f = open(os.path.join(path, "results-Volume.txt"), "w+")
 j = 0
 for entry in finalVol:
     if j == 0:
@@ -245,7 +268,37 @@ for entry in finalVol:
     j += 1
 f.close()
 
-f = open(os.path.join(path, "results-X-Reference_{}.csv".format(str(files[referenceTimepoint-1]).split(os.sep)[-1])), "w+")
+f = open(os.path.join(path, "results-MinDist.txt"), "w+")
+j = 0
+for entry in finalMinDist:
+    if j == 0:
+        f.write("{}\n".format(str(entry).replace("[","").replace("]","")))
+    else:
+        f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
+    j += 1
+f.close()
+
+f = open(os.path.join(path, "results-MaxDist.txt"), "w+")
+j = 0
+for entry in finalMaxDist:
+    if j == 0:
+        f.write("{}\n".format(str(entry).replace("[","").replace("]","")))
+    else:
+        f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
+    j += 1
+f.close()
+
+f = open(os.path.join(path, "results-RatioDist.txt"), "w+")
+j = 0
+for entry in finalRatioDist:
+    if j == 0:
+        f.write("{}\n".format(str(entry).replace("[","").replace("]","")))
+    else:
+        f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
+    j += 1
+f.close()
+
+f = open(os.path.join(path, "results-X-Reference.txt"), "w+")
 j = 0
 for entry in finalX:
     if j == 0:
@@ -255,7 +308,7 @@ for entry in finalX:
     j += 1
 f.close()
 
-f = open(os.path.join(path, "results-Y-Reference_{}.csv".format(str(files[referenceTimepoint-1]).split(os.sep)[-1])), "w+")
+f = open(os.path.join(path, "results-Y-Reference.txt"), "w+")
 j = 0
 for entry in finalY:
     if j == 0:
@@ -265,7 +318,7 @@ for entry in finalY:
     j += 1
 f.close()
 
-f = open(os.path.join(path, "results-Z-Reference_{}.csv".format(str(files[referenceTimepoint-1]).split(os.sep)[-1])), "w+")
+f = open(os.path.join(path, "results-Z-Reference.txt"), "w+")
 j = 0
 for entry in finalZ:
     if j == 0:

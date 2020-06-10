@@ -38,8 +38,6 @@ for point in x:
 	IJ.log("\\Update:Processing Object {}/{}".format(x.index(point)+1,len(x)))
 	for time in point:
 		if not time == "NA":
-#			imp.setSlice(int(round(float(z[x.index(point)][x[x.index(point)].index(time)]))))
-			imp.setSlice(x[x.index(point)].index(time)+1)
+			imp.setZ(int(round(float(z[x.index(point)][x[x.index(point)].index(time)]))))
+			imp.setT(x[x.index(point)].index(time)+1)
 			rm.add(imp,PointRoi(int(round(float(time))),int(round(float(y[x.index(point)][x[x.index(point)].index(time)])))),x.index(point)+1)
-
-
