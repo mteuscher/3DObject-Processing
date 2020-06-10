@@ -189,13 +189,13 @@ finalZ.append(header)
 
 
 for entry in X:
-    finalVol.append("NA")
-    finalMinDist.append("NA")
-    finalMaxDist.append("NA")
-    finalRatioDist.append("NA")
-    finalX.append("NA")
-    finalY.append("NA")
-    finalZ.append("NA")
+    finalVol.append(["NA"])
+    finalMinDist.append(["NA"])
+    finalMaxDist.append(["NA"])
+    finalRatioDist.append(["NA"])
+    finalX.append(["NA"])
+    finalY.append(["NA"])
+    finalZ.append(["NA"])
 
 print("Detected {} files for Processing".format(len(files)))
 if query_yes_no("Do you want to inspect the files and their order?", default="no") is True:
@@ -238,13 +238,13 @@ while i < len(X):
                 resultX.append(temp[4])
                 resultY.append(temp[5])
                 resultZ.append(temp[6])
-        nucleiVol.append(resultVol) if not (resultVol == []) else (nucleiVol.append("NA"))
-        nucleiMinDist.append(resultMinDist) if not (resultMinDist == []) else (nucleiMinDist.append("NA"))
-        nucleiMaxDist.append(resultMaxDist) if not (resultMaxDist == []) else (nucleiMaxDist.append("NA"))
-        nucleiRatioDist.append(resultRatioDist) if not (resultRatioDist == []) else (nucleiRatioDist.append("NA"))
-        nucleiX.append(resultX) if not (resultX == []) else (nucleiX.append("NA"))
-        nucleiY.append(resultY) if not (resultY == []) else (nucleiY.append("NA"))
-        nucleiZ.append(resultZ) if not (resultZ == []) else (nucleiZ.append("NA"))
+        nucleiVol.append(resultVol) if not (resultVol == []) else (nucleiVol.append(["NA"]))
+        nucleiMinDist.append(resultMinDist) if not (resultMinDist == []) else (nucleiMinDist.append(["NA"]))
+        nucleiMaxDist.append(resultMaxDist) if not (resultMaxDist == []) else (nucleiMaxDist.append(["NA"]))
+        nucleiRatioDist.append(resultRatioDist) if not (resultRatioDist == []) else (nucleiRatioDist.append(["NA"]))
+        nucleiX.append(resultX) if not (resultX == []) else (nucleiX.append(["NA"]))
+        nucleiY.append(resultY) if not (resultY == []) else (nucleiY.append(["NA"]))
+        nucleiZ.append(resultZ) if not (resultZ == []) else (nucleiZ.append(["NA"]))
         f.close()
     finalVol[i+1] = nucleiVol
     finalMinDist[i+1] = nucleiMinDist
@@ -255,75 +255,128 @@ while i < len(X):
     finalZ[i+1] = nucleiZ
     i += 1
 
+###### New filtering steps #####
+
+#Replace Timepoints with more than one hit with 'NA'
+def removeDuplicates(lists):
+    for point in lists:
+        for time in point:
+            if time == ['NA']:
+                pass            
+            elif len(time) > 1:
+                lists[lists.index(point)][lists[lists.index(point)].index(time)] = ['NA']
+
+removeDuplicates(finalVol)
+removeDuplicates(finalMinDist)
+removeDuplicates(finalMaxDist)
+removeDuplicates(finalRatioDist)
+removeDuplicates(finalX)
+removeDuplicates(finalY)
+removeDuplicates(finalZ)
+
+#Remove Spikes (Max-Min<2.5)
+def removeSpikes(lists):
+    # get rid of the most nested list, because we excluded the possibility of duplicates with removeDuplicates()
+    cleanList = []
+    lookupList = []
+    for point in lists:
+        tempPointList = []
+        tempLookupList = []
+        for time in point:
+            for item in time:
+                if item != 'NA':
+                    tempPointList.append(item)
+                    tempLookupList.append(item)
+                else:
+                    tempLookupList.append(item)
+        cleanList.append(tempPointList)
+        lookupList.append(tempLookupList)
+
+    for cleanPoint in cleanList:
+            difference = max(cleanPoint)-min(cleanPoint)
+            while difference >= 2.5:
+                lists[cleanList.index(cleanPoint)][lookupList[cleanList.index(cleanPoint)].index(max(cleanPoint))] = ['NA']
+                cleanPoint.pop(cleanPoint.index(max(cleanPoint)))
+                difference = max(cleanPoint)-min(cleanPoint)
+    
+removeSpikes(finalVol)
+removeSpikes(finalMinDist)
+removeSpikes(finalMaxDist)
+removeSpikes(finalRatioDist)
+removeSpikes(finalX)
+removeSpikes(finalY)
+removeSpikes(finalZ)
+
+
 print("Detection finished, writing results file")
     
-f = open(os.path.join(path, "results-Volume.txt"), "w+")
+f = open(os.path.join(path, "results-Volume-unclean.txt"), "w+")
 j = 0
 for entry in finalVol:
     if j == 0:
-        f.write("{}\n".format(str(entry).replace("[","").replace("]","")))
+        f.write("{}\n".format(entry))
     else:
-        f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
+        f.write("{}\n".format(entry))
     j += 1
 f.close()
 
-f = open(os.path.join(path, "results-MinDist.txt"), "w+")
+f = open(os.path.join(path, "results-MinDist-unclean.txt"), "w+")
 j = 0
 for entry in finalMinDist:
     if j == 0:
-        f.write("{}\n".format(str(entry).replace("[","").replace("]","")))
+        f.write("{}\n".format(entry))
     else:
-        f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
+        f.write("{}\n".format(entry))
     j += 1
 f.close()
 
-f = open(os.path.join(path, "results-MaxDist.txt"), "w+")
+f = open(os.path.join(path, "results-MaxDist-unclean.txt"), "w+")
 j = 0
 for entry in finalMaxDist:
     if j == 0:
-        f.write("{}\n".format(str(entry).replace("[","").replace("]","")))
+        f.write("{}\n".format(entry))
     else:
-        f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
+        f.write("{}\n".format(entry))
     j += 1
 f.close()
 
-f = open(os.path.join(path, "results-RatioDist.txt"), "w+")
+f = open(os.path.join(path, "results-RatioDist-unclean.txt"), "w+")
 j = 0
 for entry in finalRatioDist:
     if j == 0:
-        f.write("{}\n".format(str(entry).replace("[","").replace("]","")))
+        f.write("{}\n".format(entry))
     else:
-        f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
+        f.write("{}\n".format(entry))
     j += 1
 f.close()
 
-f = open(os.path.join(path, "results-X.txt"), "w+")
+f = open(os.path.join(path, "results-X-unclean.txt"), "w+")
 j = 0
 for entry in finalX:
     if j == 0:
-        f.write("{}\n".format(str(entry).replace("[","").replace("]","")))
+        f.write("{}\n".format(entry))
     else:
-        f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
+        f.write("{}\n".format(entry))
     j += 1
 f.close()
 
-f = open(os.path.join(path, "results-Y.txt"), "w+")
+f = open(os.path.join(path, "results-Y-unclean.txt"), "w+")
 j = 0
 for entry in finalY:
     if j == 0:
-        f.write("{}\n".format(str(entry).replace("[","").replace("]","")))
+        f.write("{}\n".format(entry))
     else:
-        f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
+        f.write("{}\n".format(entry))
     j += 1
 f.close()
 
-f = open(os.path.join(path, "results-Z.txt"), "w+")
+f = open(os.path.join(path, "results-Z-unclean.txt"), "w+")
 j = 0
 for entry in finalZ:
     if j == 0:
-        f.write("{}\n".format(str(entry).replace("[","").replace("]","")))
+        f.write("{}\n".format(entry))
     else:
-        f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
+        f.write("{}\n".format(entry))
     j += 1
 f.close()
 
