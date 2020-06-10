@@ -298,7 +298,7 @@ for entry in finalRatioDist:
     j += 1
 f.close()
 
-f = open(os.path.join(path, "results-X-Reference.txt"), "w+")
+f = open(os.path.join(path, "results-X.txt"), "w+")
 j = 0
 for entry in finalX:
     if j == 0:
@@ -308,7 +308,7 @@ for entry in finalX:
     j += 1
 f.close()
 
-f = open(os.path.join(path, "results-Y-Reference.txt"), "w+")
+f = open(os.path.join(path, "results-Y.txt"), "w+")
 j = 0
 for entry in finalY:
     if j == 0:
@@ -318,7 +318,7 @@ for entry in finalY:
     j += 1
 f.close()
 
-f = open(os.path.join(path, "results-Z-Reference.txt"), "w+")
+f = open(os.path.join(path, "results-Z.txt"), "w+")
 j = 0
 for entry in finalZ:
     if j == 0:
