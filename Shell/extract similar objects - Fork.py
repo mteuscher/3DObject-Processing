@@ -1,15 +1,10 @@
 import os
 import sys
 
-X = []
-Y = []
-Z = []
-
 path = str(input("Enter Path:"))
 
 file_type = str(input("Enter file suffix:"))
 name_part = str(input("Only Process files containing:"))
-referenceTimepoint = int(input("Which Timepoint to use as Reference?:"))
 
 def sortNames(elem):
     test = elem.split("TP")[1]
@@ -158,13 +153,28 @@ def process(line):
 
 files = generateFileList(path, file_type, name_part)
 
-f = open(str(files[referenceTimepoint-1]))
+print("Detected {} files for Processing".format(len(files)))
+if query_yes_no("Do you want to inspect the files and their order?", default="yes") is True:
+    for file in files:
+        print("Timepoint {}: {}".format(files.index(file),file))
+
+referenceTimepoint = int(input("Which Timepoint to use as Reference?:"))
+
+X, Y, Z = [], [], []
+
+f = open(str(files[referenceTimepoint]))
 for line in f:
     if line.split(sep="\t")[11] is not "X":
         X.append(float(line.split(sep="\t")[11]))
         Y.append(float(line.split(sep="\t")[12]))
         Z.append(float(line.split(sep="\t")[13]))
 f.close()
+
+print("\nYour reference Timepoint is the file: {}\nIt contains {} objects".format(str(files[referenceTimepoint]), len(X)))
+if query_yes_no("Do you want to continue?") is False:
+    sys.exit()
+
+
 
 finalVol = []
 finalMinDist = []
@@ -196,16 +206,6 @@ for entry in X:
     finalX.append(["NA"])
     finalY.append(["NA"])
     finalZ.append(["NA"])
-
-print("Detected {} files for Processing".format(len(files)))
-if query_yes_no("Do you want to inspect the files and their order?", default="no") is True:
-    for file in files:
-        print(file)
-    
-print("\nYour reference Timepoint is the file: {}\nIt contains {} objects".format(str(files[referenceTimepoint-1]), len(X)))
-if query_yes_no("Do you want to continue?") is False:
-    sys.exit()
-
 
 i=0
 while i < len(X):
@@ -257,29 +257,26 @@ while i < len(X):
 
 ###### New filtering steps #####
 
-#Replace Timepoints with more than one hit with 'NA'
-def removeDuplicates(lists):
-    for point in lists:
-        for time in point:
-            if time == ['NA']:
-                pass            
-            elif len(time) > 1:
-                lists[lists.index(point)][lists[lists.index(point)].index(time)] = ['NA']
+# TODO: Count number of removed points in each step
 
-removeDuplicates(finalVol)
-removeDuplicates(finalMinDist)
-removeDuplicates(finalMaxDist)
-removeDuplicates(finalRatioDist)
-removeDuplicates(finalX)
-removeDuplicates(finalY)
-removeDuplicates(finalZ)
+#Replace Timepoints with more than one hit with 'NA'
+def removeDuplicates(*args):
+    for lists in args:
+        for point in lists:
+            for time in point:
+                if time == ['NA']:
+                    pass            
+                elif len(time) > 1:
+                    lists[lists.index(point)][lists[lists.index(point)].index(time)] = ['NA']
+
+removeDuplicates(finalVol, finalMinDist, finalMaxDist, finalRatioDist, finalX, finalY, finalZ)
 
 #Remove Spikes (Max-Min<2.5)
-def removeSpikes(lists):
+def removeSpikes(ratioList, *args):
     # get rid of the most nested list, because we excluded the possibility of duplicates with removeDuplicates()
     cleanList = []
     lookupList = []
-    for point in lists:
+    for point in ratioList:
         tempPointList = []
         tempLookupList = []
         for time in point:
@@ -293,90 +290,90 @@ def removeSpikes(lists):
         lookupList.append(tempLookupList)
 
     for cleanPoint in cleanList:
+        if len(cleanPoint) != 0:
             difference = max(cleanPoint)-min(cleanPoint)
             while difference >= 2.5:
-                lists[cleanList.index(cleanPoint)][lookupList[cleanList.index(cleanPoint)].index(max(cleanPoint))] = ['NA']
+                for lists in args:
+                    lists[cleanList.index(cleanPoint)][lookupList[cleanList.index(cleanPoint)].index(max(cleanPoint))] = ['NA']
                 cleanPoint.pop(cleanPoint.index(max(cleanPoint)))
                 difference = max(cleanPoint)-min(cleanPoint)
+        else:
+            pass
     
-removeSpikes(finalVol)
-removeSpikes(finalMinDist)
-removeSpikes(finalMaxDist)
-removeSpikes(finalRatioDist)
-removeSpikes(finalX)
-removeSpikes(finalY)
-removeSpikes(finalZ)
+# Remove Spikes is based on Ratio. It has to be the first list passed as an argument!
+removeSpikes(finalRatioDist, finalVol, finalMinDist, finalMaxDist, finalX, finalY, finalZ)
+
 
 
 print("Detection finished, writing results file")
     
-f = open(os.path.join(path, "results-Volume-unclean.txt"), "w+")
-j = 0
+f = open(os.path.join(path, "results-Volume.txt"), "w+")
+j = 1
 for entry in finalVol:
     if j == 0:
-        f.write("{}\n".format(entry))
+        f.write("{}\n".format(str(entry).replace("[","").replace("]","")))
     else:
-        f.write("{}\n".format(entry))
+        f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
     j += 1
 f.close()
 
-f = open(os.path.join(path, "results-MinDist-unclean.txt"), "w+")
-j = 0
+f = open(os.path.join(path, "results-MinDist.txt"), "w+")
+j = 1
 for entry in finalMinDist:
     if j == 0:
-        f.write("{}\n".format(entry))
+        f.write("{}\n".format(str(entry).replace("[","").replace("]","")))
     else:
-        f.write("{}\n".format(entry))
+        f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
     j += 1
 f.close()
 
-f = open(os.path.join(path, "results-MaxDist-unclean.txt"), "w+")
-j = 0
+f = open(os.path.join(path, "results-MaxDist.txt"), "w+")
+j = 1
 for entry in finalMaxDist:
     if j == 0:
-        f.write("{}\n".format(entry))
+        f.write("{}\n".format(str(entry).replace("[","").replace("]","")))
     else:
-        f.write("{}\n".format(entry))
+        f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
     j += 1
 f.close()
 
-f = open(os.path.join(path, "results-RatioDist-unclean.txt"), "w+")
-j = 0
+f = open(os.path.join(path, "results-RatioDist.txt"), "w+")
+j = 1
 for entry in finalRatioDist:
     if j == 0:
-        f.write("{}\n".format(entry))
+        f.write("{}\n".format(str(entry).replace("[","").replace("]","")))
     else:
-        f.write("{}\n".format(entry))
+        f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
     j += 1
 f.close()
 
-f = open(os.path.join(path, "results-X-unclean.txt"), "w+")
-j = 0
+f = open(os.path.join(path, "results-X.txt"), "w+")
+j = 1
 for entry in finalX:
     if j == 0:
-        f.write("{}\n".format(entry))
+        f.write("{}\n".format(str(entry).replace("[","").replace("]","")))
     else:
-        f.write("{}\n".format(entry))
+        f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
     j += 1
 f.close()
 
-f = open(os.path.join(path, "results-Y-unclean.txt"), "w+")
-j = 0
+f = open(os.path.join(path, "results-Y.txt"), "w+")
+j = 1
 for entry in finalY:
     if j == 0:
-        f.write("{}\n".format(entry))
+        f.write("{}\n".format(str(entry).replace("[","").replace("]","")))
     else:
-        f.write("{}\n".format(entry))
+        f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
     j += 1
 f.close()
 
-f = open(os.path.join(path, "results-Z-unclean.txt"), "w+")
-j = 0
+f = open(os.path.join(path, "results-Z.txt"), "w+")
+j = 1
 for entry in finalZ:
     if j == 0:
-        f.write("{}\n".format(entry))
+        f.write("{}\n".format(str(entry).replace("[","").replace("]","")))
     else:
-        f.write("{}\n".format(entry))
+        f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
     j += 1
 f.close()
 
