@@ -78,7 +78,7 @@ def generateFileList(folders, suffix="xls", name_filter=None, recursive=False):
             # the first return value represents the current directory.
             # The second return value is a list of included directories.
             # The third return value is a list of included files.
-            for directory, dir_names, file_names in os.walk(folder):
+            for directory, _, file_names in os.walk(folder):
                 # We are only interested in files.
                 for file_name in file_names:
                     # The list contains only the file names.
@@ -260,19 +260,28 @@ while i < len(X):
 # TODO: Count number of removed points in each step
 
 #Replace Timepoints with more than one hit with 'NA'
-def removeDuplicates(*args):
+def removeDuplicates(*args):  
     for lists in args:
+        duplicatesRemovedTotal = 0
+        duplicatePoints = set()
+        pointID = 1
         for point in lists:
             for time in point:
                 if time == ['NA']:
                     pass            
                 elif len(time) > 1:
                     lists[lists.index(point)][lists[lists.index(point)].index(time)] = ['NA']
+                    duplicatesRemovedTotal += 1
+                    duplicatePoints.add(pointID)
+            pointID += 1
+    for point in sorted(duplicatePoints):
+        print("Duplicates found for point with ID: {}".format(point))
+    print("Removed {} duplicates in total from {} points".format(duplicatesRemovedTotal, len(duplicatePoints)))
 
 removeDuplicates(finalVol, finalMinDist, finalMaxDist, finalRatioDist, finalX, finalY, finalZ)
 
 #Remove Spikes (Max-Min<2.5)
-def removeSpikes(ratioList, *args):
+def removeSpikes(*args, ratioList):
     # get rid of the most nested list, because we excluded the possibility of duplicates with removeDuplicates()
     cleanList = []
     lookupList = []
@@ -293,6 +302,7 @@ def removeSpikes(ratioList, *args):
         if len(cleanPoint) != 0:
             difference = max(cleanPoint)-min(cleanPoint)
             while difference >= 2.5:
+                ratioList[cleanList.index(cleanPoint)][lookupList[cleanList.index(cleanPoint)].index(max(cleanPoint))] = ['NA']
                 for lists in args:
                     lists[cleanList.index(cleanPoint)][lookupList[cleanList.index(cleanPoint)].index(max(cleanPoint))] = ['NA']
                 cleanPoint.pop(cleanPoint.index(max(cleanPoint)))
@@ -300,8 +310,8 @@ def removeSpikes(ratioList, *args):
         else:
             pass
     
-# Remove Spikes is based on Ratio. It has to be the first list passed as an argument!
-removeSpikes(finalRatioDist, finalVol, finalMinDist, finalMaxDist, finalX, finalY, finalZ)
+# Remove Spikes is based on Ratio. It has to be passed as a keyworded argument or the function fails!
+removeSpikes(finalVol, finalMinDist, finalMaxDist, finalX, finalY, finalZ, ratioList = finalRatioDist)
 
 
 
