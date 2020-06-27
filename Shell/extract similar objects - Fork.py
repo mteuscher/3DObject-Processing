@@ -255,28 +255,36 @@ while i < len(X):
     finalZ[i+1] = nucleiZ
     i += 1
 
-###### New filtering steps #####
+#### New filtering steps #####
 
-# TODO: Count number of removed points in each step
+##########################################
+## Known bug in duplicates:             ##
+##                                      ##
+## Filenames are point 0 and removed    ##
+##########################################
 
 #Replace Timepoints with more than one hit with 'NA'
-def removeDuplicates(*args):  
+def removeDuplicates(*args):
+    listCount = 1
+    pointCount = 0 
     for lists in args:
         duplicatesRemovedTotal = 0
-        duplicatePoints = set()
-        pointID = 1
         for point in lists:
+            uniquePoint = 0
             for time in point:
                 if time == ['NA']:
                     pass            
                 elif len(time) > 1:
+                    if listCount == 1:
+                        print("Point {}: Duplicate found".format(lists.index(point)))
+                        if uniquePoint == 0:
+                            pointCount += 1  
                     lists[lists.index(point)][lists[lists.index(point)].index(time)] = ['NA']
                     duplicatesRemovedTotal += 1
-                    duplicatePoints.add(pointID)
-            pointID += 1
-    for point in sorted(duplicatePoints):
-        print("Duplicates found for point with ID: {}".format(point))
-    print("Removed {} duplicates in total from {} points".format(duplicatesRemovedTotal, len(duplicatePoints)))
+                    uniquePoint += 1
+                    
+        listCount += 1
+    print("Removed {} duplicates in total from {} points".format(duplicatesRemovedTotal, pointCount))
 
 removeDuplicates(finalVol, finalMinDist, finalMaxDist, finalRatioDist, finalX, finalY, finalZ)
 
@@ -298,17 +306,28 @@ def removeSpikes(*args, ratioList):
         cleanList.append(tempPointList)
         lookupList.append(tempLookupList)
 
+    spikeCounter = 0
+    spikePointsCounter = 0
     for cleanPoint in cleanList:
         if len(cleanPoint) != 0:
             difference = max(cleanPoint)-min(cleanPoint)
+            pointSpikeCounter = 0
             while difference >= 2.5:
+                if pointSpikeCounter == 0:
+                    pointID = cleanList.index(cleanPoint)
                 ratioList[cleanList.index(cleanPoint)][lookupList[cleanList.index(cleanPoint)].index(max(cleanPoint))] = ['NA']
                 for lists in args:
                     lists[cleanList.index(cleanPoint)][lookupList[cleanList.index(cleanPoint)].index(max(cleanPoint))] = ['NA']
                 cleanPoint.pop(cleanPoint.index(max(cleanPoint)))
                 difference = max(cleanPoint)-min(cleanPoint)
+                spikeCounter += 1
+                pointSpikeCounter += 1
+            if pointSpikeCounter != 0:
+                print("Point {}: {} value(s) removed.".format(pointID, pointSpikeCounter))
+                spikePointsCounter += 1
         else:
             pass
+    print("Removed {} spikes in {} points".format(spikeCounter, spikePointsCounter))
     
 # Remove Spikes is based on Ratio. It has to be passed as a keyworded argument or the function fails!
 removeSpikes(finalVol, finalMinDist, finalMaxDist, finalX, finalY, finalZ, ratioList = finalRatioDist)
