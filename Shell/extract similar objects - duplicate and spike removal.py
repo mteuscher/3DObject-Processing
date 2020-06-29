@@ -1,10 +1,31 @@
 import os
 import sys
+import argparse
 
-path = str(input("Enter Path:"))
+parser = argparse.ArgumentParser()
 
-file_type = str(input("Enter file suffix:"))
-name_part = str(input("Only Process files containing:"))
+parser.add_argument("-p", "--path", help="Path of the statistics files")
+parser.add_argument("-s", "--suffix", help="File suffix of statistics files")
+parser.add_argument("-f", "--filter", help="Only process files containing a certain string")
+parser.add_argument("-r", "--reference", help="Use the following file as a reference")
+
+args = parser.parse_args()
+
+if args.path != None:
+    path = args.path
+else:
+    print("This script can also be run from the command line. Execute with -h for help")
+    path = str(input("Enter Path:"))
+
+if args.suffix != None:
+    file_type = args.suffix
+else:
+    file_type = str(input("Enter file suffix:"))
+
+if args.filter != None:
+    name_part = args.filter
+else:
+    name_part = str(input("Only Process files containing:"))
 
 log = open(os.path.join(path, "log.txt"), "w+")
 
@@ -155,17 +176,20 @@ def process(line):
 
 files = generateFileList(path, file_type, name_part)
 
-print("Detected {} files for Processing".format(len(files)))
-if query_yes_no("Do you want to inspect the files and their order?", default="yes") is True:
-    for file in files:
-        print("Timepoint {}: {}".format(files.index(file),file))
 
 for file in files:
     print("Timepoint {}: {}".format(files.index(file),file), file=log)
 
 print("---------------------------------------------", file=log)
 
-referenceTimepoint = int(input("Which Timepoint to use as Reference?:"))
+if args.reference != None:
+    referenceTimepoint = int(args.reference)
+else:
+    print("Detected {} files for Processing".format(len(files)))
+    if query_yes_no("Do you want to inspect the files and their order?", default="yes") is True:
+        for file in files:
+            print("Timepoint {}: {}".format(files.index(file),file))
+    referenceTimepoint = int(input("Which Timepoint to use as Reference?:"))
 
 X, Y, Z = [], [], []
 
