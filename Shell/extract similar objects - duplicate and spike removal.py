@@ -8,6 +8,7 @@ parser.add_argument("-p", "--path", help="Path of the statistics files")
 parser.add_argument("-s", "--suffix", help="File suffix of statistics files")
 parser.add_argument("-f", "--filter", help="Only process files containing a certain string")
 parser.add_argument("-r", "--reference", help="Use the following file as a reference")
+parser.add_argument("-d", "--debug", help="Also create files that weren't filtered", action="store_true")
 
 args = parser.parse_args()
 
@@ -290,6 +291,66 @@ while i < len(X):
     finalZ[i+1] = nucleiZ
     i += 1
 
+
+if args.debug:
+    replaceListSymbols = False
+    
+    f = open(os.path.join(path, "results-Volume-unfiltered.txt"), "w+")
+    for entry in finalVol:
+        if replaceListSymbols == False:
+            f.write("{}\n".format(str(entry)))
+        else:
+            f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
+    f.close()
+
+    f = open(os.path.join(path, "results-MinDist-unfiltered.txt"), "w+")
+    for entry in finalMinDist:
+        if replaceListSymbols == False:
+            f.write("{}\n".format(str(entry)))
+        else:
+            f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
+    f.close()
+
+    f = open(os.path.join(path, "results-MaxDist-unfiltered.txt"), "w+")
+    for entry in finalMaxDist:
+        if replaceListSymbols == False:
+            f.write("{}\n".format(str(entry)))
+        else:
+            f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
+    f.close()
+
+    f = open(os.path.join(path, "results-RatioDist-unfiltered.txt"), "w+")
+    for entry in finalRatioDist:
+        if replaceListSymbols == False:
+            f.write("{}\n".format(str(entry)))
+        else:
+            f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
+    f.close()
+
+    f = open(os.path.join(path, "results-X-unfiltered.txt"), "w+")
+    for entry in finalX:
+        if replaceListSymbols == False:
+            f.write("{}\n".format(str(entry)))
+        else:
+            f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
+    f.close()
+
+    f = open(os.path.join(path, "results-Y-unfiltered.txt"), "w+")
+    for entry in finalY:
+        if replaceListSymbols == False:
+            f.write("{}\n".format(str(entry)))
+        else:
+            f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
+    f.close()
+
+    f = open(os.path.join(path, "results-Z-unfiltered.txt"), "w+")
+    for entry in finalZ:
+        if replaceListSymbols == False:
+            f.write("{}\n".format(str(entry)))
+        else:
+            f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
+    f.close()
+
 #### New filtering steps #####
 
 ##########################################
@@ -416,10 +477,11 @@ print("---------------------------------------------", file=log)
 log.close()
 print("Detection finished, writing results file")
     
-f = open(os.path.join(path, "results-Volume.txt"), "w+")
+
 
 replaceListSymbols = True 
 
+f = open(os.path.join(path, "results-Volume.txt"), "w+")
 for entry in finalVol:
     if replaceListSymbols == False:
         f.write("{}\n".format(str(entry)))
