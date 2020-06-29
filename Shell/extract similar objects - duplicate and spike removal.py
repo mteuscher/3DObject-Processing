@@ -160,6 +160,11 @@ if query_yes_no("Do you want to inspect the files and their order?", default="ye
     for file in files:
         print("Timepoint {}: {}".format(files.index(file),file))
 
+for file in files:
+    print("Timepoint {}: {}".format(files.index(file),file), file=log)
+
+print("---------------------------------------------", file=log)
+
 referenceTimepoint = int(input("Which Timepoint to use as Reference?:"))
 
 X, Y, Z = [], [], []
@@ -173,14 +178,14 @@ for line in f:
 f.close()
 
 print("\nYour reference Timepoint is the file: {}\nIt contains {} objects".format(str(files[referenceTimepoint]), len(X)))
-print("\nYour reference Timepoint is the file: {}\nIt contains {} objects".format(str(files[referenceTimepoint]), len(X)), file=log)
+print("Your reference Timepoint is the file: {}\nIt contains {} objects".format(str(files[referenceTimepoint]), len(X)), file=log)
 if query_yes_no("Do you want to continue?") is False:
     print("Detection aborted")
     print("Detection aborted", file=log)
     log.close()
     sys.exit()
 
-
+print("---------------------------------------------", file=log)
 
 finalVol = []
 finalMinDist = []
@@ -266,9 +271,9 @@ while i < len(X):
 ##########################################
 ## Known bugs                           ##
 ##                                      ##
-## If there are too few timepoints      ##
-## identification of correct entry in   ##
-## lists with .index() fails            ##
+##                                      ##
+##                                      ##
+##                                      ##
 ##########################################
 
 #Replace Timepoints with more than one hit with 'NA'
@@ -288,7 +293,6 @@ def removeDuplicates(*args):
                         print("Point {}: Duplicate found".format(lists.index(point)), file=log)
                         if uniquePoint == 0:
                             pointCount += 1  
-                    #time = ['NA']
                     lists[lists.index(point)][lists[lists.index(point)].index(time)] = ['NA']
                     duplicatesRemovedTotal += 1
                     uniquePoint += 1
@@ -298,6 +302,7 @@ def removeDuplicates(*args):
     print("Removed {} duplicates in total from {} points".format(duplicatesRemovedTotal, pointCount), file=log)
 
 removeDuplicates(finalVol, finalMinDist, finalMaxDist, finalRatioDist, finalX, finalY, finalZ)
+print("---------------------------------------------", file=log)
 
 #Remove Spikes (Max-Min<2.5)
 def removeSpikes(*args, ratioList):
@@ -344,6 +349,7 @@ def removeSpikes(*args, ratioList):
     
 # Remove Spikes is based on Ratio. It has to be passed as a keyworded argument or the function fails!
 removeSpikes(finalVol, finalMinDist, finalMaxDist, finalX, finalY, finalZ, ratioList = finalRatioDist)
+print("---------------------------------------------", file=log)
 
 # Only display objects that are present in 80% of timepoints, replace others by text
 
@@ -359,94 +365,90 @@ def checkCoverage(*args):
                 for item in time:
                     tempPointList.append(item)
             cleanList.append(tempPointList)
-
+        
+        iterator = 0
+        
         for point in cleanList:
             try:
                 coverage = (len(point)-point.count('NA'))/len(point)
             except ZeroDivisionError:
+                print("Coverage Calculation raised ZeroDivisonError on point {} for input-List number {}".format(iterator, listCount), file=log)
+                iterator += 1
                 continue
             if coverage < 0.8:
                 if listCount == 1:
-                    print("Point {} is found in less than 80% of timepoints".format(cleanList.index(point)))
-                    print("Point {} is found in less than 80% of timepoints".format(cleanList.index(point)), file=log)
+                    print("Point {} was only found in {}% of timepoints".format(iterator,round(coverage*100,2)))
+                    print("Point {} was only found in {}% of timepoints".format(iterator,round(coverage*100,2)), file=log)
                     pointCount += 1
-                inputList[cleanList.index(point)] = "Coverage less than 80%"
+                #inputList[cleanList.index(point)] = "Coverage only {}%".format(coverage*100)
+                inputList[iterator] = "Coverage_only_{}%".format(round(coverage*100,2))
+            iterator += 1
         listCount += 1
     print("Replaced a total of {} points".format(pointCount))
     print("Replaced a total of {} points".format(pointCount), file=log)
 
 checkCoverage(finalVol, finalMinDist, finalMaxDist, finalRatioDist, finalX, finalY, finalZ)
+print("---------------------------------------------", file=log)
 log.close()
 print("Detection finished, writing results file")
     
 f = open(os.path.join(path, "results-Volume.txt"), "w+")
-j = 1
+
+replaceListSymbols = True 
+
 for entry in finalVol:
-    if j == 0:
-        f.write("{}\n".format(str(entry).replace("[","").replace("]","")))
+    if replaceListSymbols == False:
+        f.write("{}\n".format(str(entry)))
     else:
         f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
-    j += 1
 f.close()
 
 f = open(os.path.join(path, "results-MinDist.txt"), "w+")
-j = 1
 for entry in finalMinDist:
-    if j == 0:
-        f.write("{}\n".format(str(entry).replace("[","").replace("]","")))
+    if replaceListSymbols == False:
+        f.write("{}\n".format(str(entry)))
     else:
         f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
-    j += 1
 f.close()
 
 f = open(os.path.join(path, "results-MaxDist.txt"), "w+")
-j = 1
 for entry in finalMaxDist:
-    if j == 0:
-        f.write("{}\n".format(str(entry).replace("[","").replace("]","")))
+    if replaceListSymbols == False:
+        f.write("{}\n".format(str(entry)))
     else:
         f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
-    j += 1
 f.close()
 
 f = open(os.path.join(path, "results-RatioDist.txt"), "w+")
-j = 1
 for entry in finalRatioDist:
-    if j == 0:
-        f.write("{}\n".format(str(entry).replace("[","").replace("]","")))
+    if replaceListSymbols == False:
+        f.write("{}\n".format(str(entry)))
     else:
         f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
-    j += 1
 f.close()
 
 f = open(os.path.join(path, "results-X.txt"), "w+")
-j = 1
 for entry in finalX:
-    if j == 0:
-        f.write("{}\n".format(str(entry).replace("[","").replace("]","")))
+    if replaceListSymbols == False:
+        f.write("{}\n".format(str(entry)))
     else:
         f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
-    j += 1
 f.close()
 
 f = open(os.path.join(path, "results-Y.txt"), "w+")
-j = 1
 for entry in finalY:
-    if j == 0:
-        f.write("{}\n".format(str(entry).replace("[","").replace("]","")))
+    if replaceListSymbols == False:
+        f.write("{}\n".format(str(entry)))
     else:
         f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
-    j += 1
 f.close()
 
 f = open(os.path.join(path, "results-Z.txt"), "w+")
-j = 1
 for entry in finalZ:
-    if j == 0:
-        f.write("{}\n".format(str(entry).replace("[","").replace("]","")))
+    if replaceListSymbols == False:
+        f.write("{}\n".format(str(entry)))
     else:
         f.write("{}\n".format(str(entry).replace("[","").replace("]","").replace("\'","").replace(" ","")))
-    j += 1
 f.close()
 
 print("Processing finished")
