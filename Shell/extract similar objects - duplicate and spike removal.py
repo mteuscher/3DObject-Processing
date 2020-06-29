@@ -6,6 +6,8 @@ path = str(input("Enter Path:"))
 file_type = str(input("Enter file suffix:"))
 name_part = str(input("Only Process files containing:"))
 
+log = open(os.path.join(path, "log.txt"), "w+")
+
 def sortNames(elem):
     test = elem.split("TP")[1]
     test = test.split("_")[0]
@@ -171,7 +173,11 @@ for line in f:
 f.close()
 
 print("\nYour reference Timepoint is the file: {}\nIt contains {} objects".format(str(files[referenceTimepoint]), len(X)))
+print("\nYour reference Timepoint is the file: {}\nIt contains {} objects".format(str(files[referenceTimepoint]), len(X)), file=log)
 if query_yes_no("Do you want to continue?") is False:
+    print("Detection aborted")
+    print("Detection aborted", file=log)
+    log.close()
     sys.exit()
 
 
@@ -185,9 +191,9 @@ finalY = []
 finalZ = []
 
 header = []
-for file in files:
-    header.append(file.split(os.sep)[-1])
-    
+#for file in files:
+#    header.append(file.split(os.sep)[-1])
+#    
 finalVol.append(header)
 finalMinDist.append(header)
 finalMaxDist.append(header)
@@ -258,9 +264,11 @@ while i < len(X):
 #### New filtering steps #####
 
 ##########################################
-## Known bug in duplicates:             ##
+## Known bugs                           ##
 ##                                      ##
-## Filenames are point 0 and removed    ##
+## If there are too few timepoints      ##
+## identification of correct entry in   ##
+## lists with .index() fails            ##
 ##########################################
 
 #Replace Timepoints with more than one hit with 'NA'
@@ -277,14 +285,17 @@ def removeDuplicates(*args):
                 elif len(time) > 1:
                     if listCount == 1:
                         print("Point {}: Duplicate found".format(lists.index(point)))
+                        print("Point {}: Duplicate found".format(lists.index(point)), file=log)
                         if uniquePoint == 0:
                             pointCount += 1  
+                    #time = ['NA']
                     lists[lists.index(point)][lists[lists.index(point)].index(time)] = ['NA']
                     duplicatesRemovedTotal += 1
                     uniquePoint += 1
                     
         listCount += 1
     print("Removed {} duplicates in total from {} points".format(duplicatesRemovedTotal, pointCount))
+    print("Removed {} duplicates in total from {} points".format(duplicatesRemovedTotal, pointCount), file=log)
 
 removeDuplicates(finalVol, finalMinDist, finalMaxDist, finalRatioDist, finalX, finalY, finalZ)
 
@@ -298,7 +309,7 @@ def removeSpikes(*args, ratioList):
         tempLookupList = []
         for time in point:
             for item in time:
-                if item != 'NA':
+                if item != 'NA' and item != None:
                     tempPointList.append(item)
                     tempLookupList.append(item)
                 else:
@@ -324,16 +335,48 @@ def removeSpikes(*args, ratioList):
                 pointSpikeCounter += 1
             if pointSpikeCounter != 0:
                 print("Point {}: {} value(s) removed.".format(pointID, pointSpikeCounter))
+                print("Point {}: {} value(s) removed.".format(pointID, pointSpikeCounter), file=log)
                 spikePointsCounter += 1
         else:
             pass
     print("Removed {} spikes in {} points".format(spikeCounter, spikePointsCounter))
+    print("Removed {} spikes in {} points".format(spikeCounter, spikePointsCounter), file=log)
     
 # Remove Spikes is based on Ratio. It has to be passed as a keyworded argument or the function fails!
 removeSpikes(finalVol, finalMinDist, finalMaxDist, finalX, finalY, finalZ, ratioList = finalRatioDist)
 
+# Only display objects that are present in 80% of timepoints, replace others by text
 
+def checkCoverage(*args):
+    listCount = 1
+    pointCount = 0
+    for inputList in args:
+        # get rid of the most nested list, because we excluded the possibility of duplicates with removeDuplicates()
+        cleanList = []
+        for point in inputList:
+            tempPointList = []
+            for time in point:
+                for item in time:
+                    tempPointList.append(item)
+            cleanList.append(tempPointList)
 
+        for point in cleanList:
+            try:
+                coverage = (len(point)-point.count('NA'))/len(point)
+            except ZeroDivisionError:
+                continue
+            if coverage < 0.8:
+                if listCount == 1:
+                    print("Point {} is found in less than 80% of timepoints".format(cleanList.index(point)))
+                    print("Point {} is found in less than 80% of timepoints".format(cleanList.index(point)), file=log)
+                    pointCount += 1
+                inputList[cleanList.index(point)] = "Coverage less than 80%"
+        listCount += 1
+    print("Replaced a total of {} points".format(pointCount))
+    print("Replaced a total of {} points".format(pointCount), file=log)
+
+checkCoverage(finalVol, finalMinDist, finalMaxDist, finalRatioDist, finalX, finalY, finalZ)
+log.close()
 print("Detection finished, writing results file")
     
 f = open(os.path.join(path, "results-Volume.txt"), "w+")
