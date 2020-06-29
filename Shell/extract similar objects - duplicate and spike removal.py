@@ -294,7 +294,7 @@ while i < len(X):
 
 if args.debug:
     replaceListSymbols = False
-    
+
     f = open(os.path.join(path, "results-Volume-unfiltered.txt"), "w+")
     for entry in finalVol:
         if replaceListSymbols == False:
@@ -460,7 +460,7 @@ def checkCoverage(*args):
                 print("Coverage Calculation raised ZeroDivisonError on point {} for input-List number {}".format(iterator, listCount), file=log)
                 iterator += 1
                 continue
-            if coverage < 0.8:
+            if coverage < 0.7:
                 if listCount == 1:
                     print("Point {} was only found in {}% of timepoints".format(iterator,round(coverage*100,2)))
                     print("Point {} was only found in {}% of timepoints".format(iterator,round(coverage*100,2)), file=log)
